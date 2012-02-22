@@ -44,12 +44,11 @@ typedef union { intfunc __fun; void * __ptr; } intvec_elem;
 #pragma language=extended
 #pragma segment="CSTACK"
 
-void __iar_program_start( void );
-
+//void __program_start( void );
 //#pragma location = "INTVEC"
-
-
+void __iar_program_start( void );
 #pragma location = ".intvec"
+
 /* STM32F10x Vector Table entries */
 const intvec_elem __vector_table[] =
 {

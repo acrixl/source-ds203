@@ -588,7 +588,7 @@
         </option>
         <option>
           <name>IlinkMapFile</name>
-          <state>1</state>
+          <state>0</state>
         </option>
         <option>
           <name>IlinkLogFile</name>
@@ -616,7 +616,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>E:\DS0203\APP_V2.32\IAR_V5_Prpject\stm32f10x_flash.icf</state>
+          <state>$PROJ_DIR$\stm32f10x_flash.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>
