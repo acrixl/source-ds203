@@ -266,7 +266,10 @@ void Calibrat(void)
         }
       } else {
         Print_Str( 10, 166-(8*20), 0x0405, Twink, (u8*)ExitStr[Exit % 3]);
-        Print_Str(4*8, 216, 0x0605, PRN, "    Push the . key to confirm exit        ");
+        Print_Str( 4*8, 216, 0x0605, PRN, "    Push the ");
+        Print_Str(18*8, 216, 0x0605, PRN, " key to confirm exit        ");
+        __LCD_Set_Block(17*8, 18*8, 217, 224);
+        for(i=0; i<64; i++)  __LCD_SetPixl(ORANGE);
       }
     }
   }
