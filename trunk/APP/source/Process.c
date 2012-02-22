@@ -229,7 +229,9 @@ void Process(void)
 
   if(Interlace == 0){                          // 独立采样模式
     for(i=0; i <4096; i++){
-      if((__Get(FIFO_EMPTY)==0)&&(i == JumpCnt)&&(_Status == RUN)){
+//      if((__Get(FIFO_EMPTY)==0)&&(i == JumpCnt)&&(_Status == RUN)){
+      if(_T_base > 16)  DataBuf[i] = __Read_FIFO(); // 读入32位FIFO数据, 读后指针+1
+      else if((__Get(FIFO_EMPTY)==0)&&(i == JumpCnt)&&(_Status == RUN)){
         JumpCnt++;
         DataBuf[i] = __Read_FIFO();             // 读入32位FIFO数据, 读后指针+1
       }

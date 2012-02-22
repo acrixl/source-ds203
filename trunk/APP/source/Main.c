@@ -23,9 +23,15 @@ APP V2.31: 增加了开机识别FPGA加载配置完成与否判别(Main.c)
            增加了Licence权限管理功能的Demo程序范例(Ident.c,Main.c)
            修改了模拟通道校正功能的进入和退出相关操作(calibrat.c)
            增加了144MHz交替采样模式下的相关功能(Process.c)
+APP V2.32  从该版本起可并行使用IAR 4.42与5.0版本
+           源程序没改动，增加了文件夹　IAR_V5_Prpject
+APP V2.33  修改了扫描时基<1uS时，显示刷新的BUG(Process.c)
+           修改了在校准状态下，操作提示信息的BUG(Calibrat.c)
 *******************************************************************************/
 
-uc8 PROJECT_STR[20]="Demo PROG. Ver 1.00";
+#define APP_VERSION       "     DS203 Mini DSO APP Ver 2.33      "
+
+uc8 PROJECT_STR[20] = "Demo PROG. Ver 1.00";
 
 /*******************************************************************************
   main : Main routine.

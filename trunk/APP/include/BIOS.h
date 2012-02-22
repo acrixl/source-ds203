@@ -7,7 +7,7 @@
 
 #include "stm32f10x_lib.h"
 
-#define APP_VERSION       "     DS203 Mini DSO APP Ver 2.31       "
+//#define APP_VERSION       "     DS203 Mini DSO APP Ver 2.33      "
 
 //============================= Flash ø’º‰∑÷≈‰ =================================
 
