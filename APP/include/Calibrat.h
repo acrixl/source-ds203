@@ -7,9 +7,10 @@
 
 #include "stm32f10x_lib.h"
 
-#define _100uS      13   // T_BASE = 100uS/Div
+#define _100uS      12   // T_BASE = 100uS/Div
+#define _2uS        17   // T_BASE = 2uS/Div
 
-
+void Balance(void);
 void Calibrat(u8 Channel);
  
 

@@ -79,6 +79,7 @@ typedef struct  // 脉冲波形输出驱动表
   u16  Duty;    // 占空比系数
 } D_tab ; 
 
+extern u8  Interlace;
 extern u8  TrackBuff [X_SIZE * 4];          // i+0~3,分别存放1～4号轨迹数据
 extern u16 JumpCnt;
 extern u32 a_Avg, b_Avg;                    // 统计用中间变量
@@ -86,6 +87,7 @@ extern u32 a_Avg, b_Avg;                    // 统计用中间变量
 extern s16 A_Vdc, A_Vpp, A_Max, A_Min, A_Rms;     // 计量结果
 extern s16 B_Vdc, B_Vpp, B_Max, B_Min, B_Rms;     
 
+extern s8  Kab;              // 模拟通道零点平衡校正系数
 extern s8  Ka1[10], Kb1[10]; // 模拟通道零点误差校正系数
 extern u16 Ka2[10], Kb2[10]; // 模拟通道增益误差校正系数
 extern u16 Ka3, Kb3;         // 模拟通道位移误差校正系数
