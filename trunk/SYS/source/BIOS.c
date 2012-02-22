@@ -1,27 +1,33 @@
 /********************* (C) COPYRIGHT 2010 e-Design Co.,Ltd. ********************
  File Name : BIOS.c  
- Version   : DS203_SYS Ver 1.3x                                  Author : bure
+ Version   : DS203_SYS Ver 1.5x                                  Author : bure
 *******************************************************************************/
+#include "Function.h"
 #include "Config.h"
 #include "Ident.h"
 #include "BIOS.h"
 #include "LCD.h"
 #include "ASM.h"
 
-  const G_attr G_ATTR[1] =//LCD_X;LCD_Y;Yp_Max;Xp_Max;Tg_Num;Yv_Max;Xt_Max
-                         {  400,   240,   8-1,    22-1,   15,     200,    4096,  
-                          //Co_Max;Ya_Num;Yd_Num;INSERT;KpA1;KpA2;KpB1;KpB2
-                            1,     1,     1,     17,    0,   1024,  0, 1024};
+uc8  HDW_Ver[20] = "Hardware Ver 2.60 ";
+uc8  DFU_Ver[5]  = "3.10";
+u8   VerStr[8];
+u8   Clash = 0;
 
-  const Y_attr Y_ATTR[9] ={//  STR     KA1    KA2    KB1    KB2     SCALE 
-                           { "50mV",    0,   1024,    0,   1024,    2000},
-                           { "0.1V",    0,   1024,    0,   1024,    4000},
-                           { "0.2V",   -2,   1024,   -6,   1024,    8000},
-                           { "0.5V",   -1,   1024,   -6,   1024,   20000},
-                           { " 1V ",    0,   1024,   -6,   1024,   40000},
-                           { " 2V ",   -2,   1024,   -6,   1024,   80000},
-                           { " 5V ",   -1,   1024,   -6,   1024,  200000},
-                           { "!10V!",   0,   1024,   -6,   1024,  400000}};
+const G_attr G_ATTR[1] =//LCD_X;LCD_Y;Yp_Max;Xp_Max;Tg_Num;Yv_Max;Xt_Max
+                       {  400,   240,   8-1,    22-1,   15,     200,    4096,  
+                        //Co_Max;Ya_Num;Yd_Num;INSERT;KpA1;KpA2;KpB1;KpB2
+                           1,     1,     1,     17,    0,   1024,  0, 1024};
+
+const Y_attr Y_ATTR[9] ={//  STR     KA1    KA2    KB1    KB2     SCALE 
+                         { "50mV",    0,   1024,    0,   1024,    2000},
+                         { "0.1V",    0,   1024,    0,   1024,    4000},
+                         { "0.2V",   -2,   1024,   -6,   1024,    8000},
+                         { "0.5V",   -1,   1024,   -6,   1024,   20000},
+                         { " 1V ",    0,   1024,   -6,   1024,   40000},
+                         { " 2V ",   -2,   1024,   -6,   1024,   80000},
+                         { " 5V ",   -1,   1024,   -6,   1024,  200000},
+                         { "!10V!",   0,   1024,   -6,   1024,  400000}};
   
 const X_attr X_ATTR[27] ={
 //   STR      PSC      ARR      CCR    KP     SCALE
@@ -53,7 +59,6 @@ const X_attr X_ATTR[27] ={
   {".2uS+",     1-1,     2-1,     1,   983,        7}, //1024*0.96  =983
   {".1uS+",     1-1,     1-1,     1,   491,        3}};//1024*0.48  =492
 
-
 const T_attr T_ATTR[32] ={
 //  STR   CHx  CMD    STR   CHx  CMD    STR   CHx  CMD    STR   CHx  CMD
   {"<Vt",  0, 0x00},{"<Vt",  1, 0x02},{"<Vt",  2, 0x04},{"<Vt",  3, 0x06},
@@ -71,10 +76,16 @@ const T_attr T_ATTR[32] ={
 u32 Set(u8 Object, u32 Value)
 {
   switch (Object){  
-  case CH_A_OFFSET:  TIM5_ARR  = 470;  TIM5_CCR1 = 450 - Value; // Value = 0~200  
-                     break;
-  case CH_B_OFFSET:  TIM5_ARR  = 470;  TIM5_CCR2 = 450 - Value; // Value = 0~200
-                     break;
+  case CH_A_OFFSET:  if(Value < 65536){
+                       TIM5_ARR = 470; TIM5_CCR1 = 450 - Value; // Value = 0~200
+                     } else {
+                       TIM5_ARR = Value >>16; TIM5_CCR1 = Value & 0xFFFF;
+                     } break;
+  case CH_B_OFFSET:  if(Value < 65536){
+                       TIM5_ARR = 470; TIM5_CCR2 = 450 - Value; // Value = 0~200
+                     } else {
+                       TIM5_ARR = Value >>16; TIM5_CCR2 = Value & 0xFFFF;
+                     } break;
   case BACKLIGHT:    TIM8_CCR1 = Value;                         // Value = 0~100
                      break;
   case BEEP_VOLUME:  TIM8_CCR2 = 100 - Value/2;                 // Value = 0~50
@@ -217,6 +228,7 @@ void Set_Param(u8 RegAddr, u8 Parameter)
 u32 Get(u8 Object, u32 Value)
 {
   u16 Data;
+  u8* Ver;
   
   switch (Object){  
     
@@ -252,7 +264,25 @@ u32 Get(u8 Object, u32 Value)
 
   case CHARGE:      return CHRG_ST;                  // Battery charge = 1
 
-  }
+  case DFUVER:      Ver = __Chk_DFU();               // DFU固件版本信息
+                    if(Ver == 0)  Ver = (u8*)DFU_Ver;
+                    if(Value == 0) return (u32)Ver;
+                    else return (Ver[0]-'0')*100 +(Ver[2]-'0')*10 +(Ver[3]-'0'); 
+  case HDWVER:      Ver = __Chk_HDW();               // 设备硬件版本信息
+                    if(Ver == 0)  Ver = (u8*)(HDW_Ver + 13);
+                    if(Value == 0) return (u32)Ver;
+                    else return (Ver[0]-'0')*100 +(Ver[2]-'0')*10 +(Ver[3]-'0'); 
+  case SYSVER:      Ver = (u8*)SYS_Ver;              // SYS程序模块版本信息
+                    if(Value == 0) return (u32)Ver;
+                    else return (Ver[0]-'0')*100 +(Ver[2]-'0')*10 +(Ver[3]-'0'); 
+  case FPGAVER:     FIFO_H_L_LOW();  
+                    Data = (*(vu16 *)0x64000000)>> 6; // FPGA配置程序版本信息
+                    u16ToDec5(VerStr, Data);
+                    VerStr[0]=VerStr[2]; VerStr[1]='.'; VerStr[2]=VerStr[3]; 
+                    VerStr[3]=VerStr[4]; VerStr[4]= 0; 
+                    if(Value == 0) return (u32)(VerStr);
+                    else return Data; 
+  } 
   return 0;                          // No used
 }
 /********************************* END OF FILE ********************************/

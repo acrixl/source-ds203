@@ -74,20 +74,20 @@
         <option>
           <name>GRuntimeLibSelect</name>
           <version>0</version>
-          <state>2</state>
+          <state>1</state>
         </option>
         <option>
           <name>GRuntimeLibSelectSlave</name>
           <version>0</version>
-          <state>2</state>
+          <state>1</state>
         </option>
         <option>
           <name>RTDescription</name>
-          <state>Use the full configuration of the C/C++ runtime library. Full locale interface, C locale, file descriptor support, multibytes in printf and scanf, and hex floats in strtod.</state>
+          <state>Use the normal configuration of the C/C++ runtime library. No locale interface, C locale, no file descriptor support, no multibytes in printf and scanf, and no hex floats in strtod.</state>
         </option>
         <option>
           <name>RTConfigPath</name>
-          <state>$TOOLKIT_DIR$\INC\DLib_Config_Full.h</state>
+          <state>$TOOLKIT_DIR$\INC\DLib_Config_Normal.h</state>
         </option>
         <option>
           <name>OGLastSavedByProductVersion</name>
@@ -222,7 +222,7 @@
         </option>
         <option>
           <name>CCLangConformance</name>
-          <state>1</state>
+          <state>0</state>
         </option>
         <option>
           <name>CCSignedPlainChar</name>
@@ -592,7 +592,7 @@
         </option>
         <option>
           <name>IlinkLogFile</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>IlinkLogInitialization</name>
@@ -616,7 +616,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>E:\DS0203\SYS_V1.34\IAR_V5_Prpject\stm32f10x_flash.icf</state>
+          <state>$PROJ_DIR$\stm32f10x_flash.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>
@@ -1597,6 +1597,12 @@
       <name>$PROJ_DIR$\..\source\Config.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\source\Ext_Flash.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\source\FAT12.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\source\Function.c</name>
     </file>
     <file>
@@ -1616,9 +1622,6 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\source\scsi_data.c</name>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\source\SPI_flash.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\source\USB_bot.c</name>

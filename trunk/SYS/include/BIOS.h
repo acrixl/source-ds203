@@ -1,16 +1,15 @@
 /********************* (C) COPYRIGHT 2010 e-Design Co.,Ltd. ********************
  File Name : BIOS.h  
- Version   : DS203_SYS Ver 1.3x                                 Author : bure
+ Version   : DS203_SYS Ver 1.5x                                 Author : bure
 *******************************************************************************/
 #ifndef __BIOS_H
 #define __BIOS_H
 
 #include "stm32f10x_lib.h"
 
-//=================== 软硬件版本相关定义 ===================
+//=================== 硬件版本相关定义 ===================
 
   #define HDW_VERSION       "Hardware Ver 2.6  "
-  #define SYS_VERSION       "     DS203 Mini DSO SYS Ver 1.34       "
 
 //==================== Flash 空间分配 ====================
 
@@ -119,6 +118,10 @@ CH_D Trigger source & kind select =>
 #define TRIGGER        10       // 触发通道属性指针
 #define FPGA_OK        11       // FPGA 配置成功
 #define CHARGE         12       // 电池充电状态
+#define HDWVER         13       // 设备硬件版本号 
+#define DFUVER         14       // DFU程序模块版本号 
+#define SYSVER         15       // SYS程序模块版本号 
+#define FPGAVER        16       // FPGA配置程序版本号 
 
 #define ADC_DATA       32+0     // 0~7:ADC_CH_A 8~15:ADC_CH_B 16~17:CH_C&CH_D 
 #define PRE_SAMPLING   32+1     // 0~15:Pre-sampling depth
@@ -266,6 +269,10 @@ typedef struct  // 触发通道属性
   u8  CHx;      // 触发通道编号
   u8  CMD;      // 触发方式控制字
 } T_attr ; 
+
+extern uc8  SYS_Ver[5]; 
+extern u8   VerStr[8];
+extern u8   Clash;
 
 extern const G_attr G_ATTR[1];
 extern const Y_attr Y_ATTR[9];

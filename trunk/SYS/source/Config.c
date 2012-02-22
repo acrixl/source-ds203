@@ -1,6 +1,6 @@
 /********************* (C) COPYRIGHT 2010 e-Design Co.,Ltd. ********************
  File Name : Config.c       
- Version   : DS203_SYS Ver 1.3x                                  Author : bure
+ Version   : DS203_SYS Ver 1.5x                                  Author : bure
 *******************************************************************************/
 #include "USB_desc.h"
 #include "Config.h"

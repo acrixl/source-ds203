@@ -22,11 +22,9 @@ typedef union { intfunc __fun; void * __ptr; } intvec_elem;
 #pragma language=extended
 #pragma segment="CSTACK"
 
-
-//void __program_start( void );
-//#pragma location = "INTVEC"
 void __iar_program_start( void );
 #pragma location = ".intvec"
+
 //======================= STM32F10x Vector Table entries =======================
 const intvec_elem __vector_table[] =
 {
@@ -103,6 +101,20 @@ const intvec_elem __vector_table[] =
   DMA2_Channel2_IRQHandler,
   DMA2_Channel3_IRQHandler,
   DMA2_Channel4_5_IRQHandler,
+/*  
+  __CTR_HP,
+  __USB_Istr,
+  __USB_Init,
+  __Point_SCR,
+  __LCD_SetPixl,
+  __LCD_GetPixl,
+  __LCD_Copy,
+  __LCD_Fill,
+  __Row_Copy,
+  __Read_FIFO,
+  __Disk_Buff_WR,
+  __Disk_Buff_RD,
+*/  
   
 };
 #ifdef DATA_IN_ExtSRAM

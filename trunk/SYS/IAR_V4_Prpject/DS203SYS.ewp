@@ -1703,6 +1703,12 @@
       <name>$PROJ_DIR$\..\source\Config.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\source\Ext_Flash.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\source\FAT12.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\source\Function.c</name>
     </file>
     <file>
@@ -1722,9 +1728,6 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\source\scsi_data.c</name>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\source\SPI_flash.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\source\USB_bot.c</name>
