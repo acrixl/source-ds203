@@ -1,8 +1,8 @@
 /********************* (C) COPYRIGHT 2010 e-Design Co.,Ltd. ********************
  File Name : Memory.c  
- Version   : DS203_SYS Ver 1.3x                                  Author : bure
+ Version   : DS203_SYS Ver 1.5x                                  Author : bure
 *******************************************************************************/
-#include "SPI_flash.h"
+#include "Ext_Flash.h"
 #include "USB_scsi.h"
 #include "USB_regs.h"
 #include "USB_conf.h"
@@ -10,12 +10,14 @@
 #include "USB_mem.h"
 #include "Config.h"
 #include "Memory.h"
+#include "BIOS.h"
+#include "ASM.h"
 
 vu32 Block_Read_count = 0;
 vu32 Block_offset;
 vu32 Counter = 0;
 u32  Idx;
-u8 Data_Buffer[512]; 
+u8 Data_Buffer[512+256]; 
 u8 TransferState = TXFR_IDLE;
 
 extern u8 Bulk_Data_Buff[BULK_MAX_PACKET_SIZE];  /* data buffer*/
@@ -45,7 +47,8 @@ void Read_Memory(u32 Memory_Offset, u32 Transfer_Length)
   {
     if (!Block_Read_count)
     {
-      SPI_FLASH_BufferRead(Data_Buffer, Offset, Mass_Block_Size);           
+      Clash = 1;
+      __ExtFlash_PageRD(Data_Buffer, Offset, Mass_Block_Size);           
       UserToPMABufferCopy((u8 *)Data_Buffer, ENDP1_TXADDR, BULK_MAX_PACKET_SIZE);
       Block_Read_count = Mass_Block_Size - BULK_MAX_PACKET_SIZE;
       Block_offset = BULK_MAX_PACKET_SIZE;
@@ -105,8 +108,9 @@ void Write_Memory (u32 Memory_Offset, u32 Transfer_Length)
     if (!(W_Length % Mass_Block_Size))
     {
       Counter = 0;
-      SPI_FLASH_PageWrite(Data_Buffer, W_Offset - Mass_Block_Size);  
-      SPI_FLASH_PageWrite(Data_Buffer + SPI_FLASH_PageSize, W_Offset - SPI_FLASH_PageSize);  
+      Clash = 1;
+      __ExtFlash_PageWR(Data_Buffer, W_Offset - Mass_Block_Size);  
+      __ExtFlash_PageWR(Data_Buffer + EXT_FLASH_PageSize, W_Offset - EXT_FLASH_PageSize);  
     }
 
     CSW.dDataResidue -= Data_Len;

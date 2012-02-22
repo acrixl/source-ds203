@@ -1,8 +1,7 @@
 /********************* (C) COPYRIGHT 2010 e-Design Co.,Ltd. ********************
  File Name : Authenticate.c  
- Version   : DS203_SYS Ver 1.3x                          Author : kewei & bure
+ Version   : DS203_SYS Ver 1.5x                          Author : kewei & bure
 *******************************************************************************/
-#include "SPI_flash.h"
 #include "Function.h"
 #include <string.h>
 #include "Ident.h"

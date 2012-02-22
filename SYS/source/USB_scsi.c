@@ -16,13 +16,10 @@
 /* Includes ------------------------------------------------------------------*/
 #include "Config.h"
 #include "USB_scsi.h"
-//#include "Mass_mal.h"
 #include "USB_bot.h"
 #include "USB_regs.h"
-#include "SPI_flash.h"
+#include "Ext_Flash.h"
 #include "Memory.h"
-//#include "nand_if.h"
-//#include "platform_config.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
