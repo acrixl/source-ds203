@@ -21,7 +21,7 @@ u8  Exit;
 /*******************************************************************************
   Calibrat : Calibrat routine
 *******************************************************************************/
-void Calibrat(void)
+void Calibrat(u8 Channel)
 { 
   u8  V_Unit[4][3]={"uV","mV","V ","kV"};
   u16 i, j, k, Range, Target;
@@ -41,7 +41,8 @@ void Calibrat(void)
   Beep_mS = 500;                                        // ·äÃùÆ÷Ïì500mS
   Exit = 0;
   Range = 0;
-  Target = 0;
+  if(Channel == TRACK1)  Target = 0;
+  else                   Target = 3;
   Key_Buffer = 0; 
   
   __Set(T_BASE_PSC, X_Attr[_100uS].PSC);                // T_BASE = 100uS
@@ -172,8 +173,22 @@ void Calibrat(void)
         App_init();
         return;
       case K_ITEM_S:
-        if(Target <5) Target++;
-        else          Target =0;
+        if(Channel == TRACK1){  
+          if(Target <2) Target = 2;
+          else          Target = 0;
+        } else {
+          if(Target <5) Target = 5;
+          else          Target = 3;
+        }
+        break;
+      case K_INDEX_S:
+        if(Channel == TRACK1){  
+          if(Target <1) Target = 1;
+          else if(Target <2) Target = 0;
+        } else {
+          if(Target <4) Target = 4;
+          else if(Target <5) Target = 3;
+        }
         break;
       case K_ITEM_DEC:
         if(Range >0) Range--;
@@ -255,7 +270,7 @@ void Calibrat(void)
           else                                             i = 9; 
           Print_Str(  4*8, 216, 0x0605, PRN, " Input ");
           Print_Str( 11*8, 216, 0x0405, PRN, (u8*)VS_STR[i]);
-          Print_Str( 21*8, 216, 0x0605, PRN, "standard voltage to ");
+          Print_Str( 20*8, 216, 0x0605, PRN, " standard voltage to ");
           if(Target < 3) Print_Str( 41*8, 216, 0x0005, PRN, "CH_A  ");
           else           Print_Str( 41*8, 216, 0x0105, PRN, "CH_B  ");
         } else {

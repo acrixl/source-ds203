@@ -27,9 +27,11 @@ APP V2.32  从该版本起可并行使用IAR 4.42与5.0版本
            源程序没改动，增加了文件夹　IAR_V5_Prpject
 APP V2.33  修改了扫描时基<1uS时，显示刷新的BUG(Process.c)
            修改了在校准状态下，操作提示信息的BUG(Calibrat.c)
+APP V2.34  改为按通道单独校准(Calibrat.c & Main.c)
+           修改了校准项选择的操作方式(Calibrat.c )
 *******************************************************************************/
 
-#define APP_VERSION       "     DS203 Mini DSO APP Ver 2.33      "
+#define APP_VERSION       "     DS203 Mini DSO APP Ver 2.34      "
 
 uc8 PROJECT_STR[20] = "Demo PROG. Ver 1.00";
 
@@ -151,20 +153,27 @@ int main(void)
         }
       }
       if(Key_Buffer== KEY2){
-        if(Current <  TRACK3){
-          Delayms(500); 
-          if((__Get(KEY_STATUS)& KEY2_STATUS)==0){
-            Delayms(500); 
-            if((__Get(KEY_STATUS)& KEY2_STATUS)==0){
-              Delayms(500); 
-              if((__Get(KEY_STATUS)& KEY2_STATUS)==0){
-                Delayms(500); 
-                if((__Get(KEY_STATUS)& KEY2_STATUS)==0){
-                  Calibrat();             // 模拟通道校准
-                }
-              }
+        if((Current == TRACK1)||(Current == TRACK2)){
+          Delay_Cnt = 2000;
+          while (Delay_Cnt > 0){
+            if((__Get(KEY_STATUS)& KEY2_STATUS)!=0){
+              Current = TRACK3;
+              break;
             }
           }
+          if(Current != TRACK3)  Calibrat(Current);             // 模拟通道校准
+//          Delayms(2000); 
+//            Delayms(500); 
+//            if((__Get(KEY_STATUS)& KEY2_STATUS)==0){
+//              Delayms(500); 
+//              if((__Get(KEY_STATUS)& KEY2_STATUS)==0){
+//                Delayms(500); 
+//                if((__Get(KEY_STATUS)& KEY2_STATUS)==0){
+//                  Calibrat();             // 模拟通道校准
+//                }
+//              }
+//            }
+//          }
         }
       }
       if(Key_Buffer== KEY3){

@@ -10,7 +10,7 @@
 #define _100uS      13   // T_BASE = 100uS/Div
 
 
-void Calibrat(void);
+void Calibrat(u8 Channel);
  
 
 
