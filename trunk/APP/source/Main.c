@@ -28,10 +28,14 @@ APP V2.32  从该版本起可并行使用IAR 4.42与5.0版本
 APP V2.33  修改了扫描时基<1uS时，显示刷新的BUG(Process.c)
            修改了在校准状态下，操作提示信息的BUG(Calibrat.c)
 APP V2.34  改为按通道单独校准(Calibrat.c & Main.c)
-           修改了校准项选择的操作方式(Calibrat.c )
+           修改了校准项选择的操作方式(Calibrat.c)
+APP V2.35  修改了校准过程中的BUG(Calibrat.c)
+           修改了扫描时基<5uS时，暂停不了的BUG(Process.c)
+           优化了显示数据处理程序(Process.c)
+           增加了模拟通道自动零点平衡功能(Main.c,Process.c,Calibrat.c)
 *******************************************************************************/
 
-#define APP_VERSION       "     DS203 Mini DSO APP Ver 2.34      "
+#define APP_VERSION       "     DS203 Mini DSO APP Ver 2.35      "
 
 uc8 PROJECT_STR[20] = "Demo PROG. Ver 1.00";
 
@@ -104,7 +108,8 @@ int main(void)
 //  --------------------------------------------------------------------------*/
   
   Beep_mS = 500;
-  Delayms(2000); 
+  Balance();
+//  Delayms(2000); 
   App_init();
   Key_Buffer=0;
   
@@ -156,24 +161,9 @@ int main(void)
         if((Current == TRACK1)||(Current == TRACK2)){
           Delay_Cnt = 2000;
           while (Delay_Cnt > 0){
-            if((__Get(KEY_STATUS)& KEY2_STATUS)!=0){
-              Current = TRACK3;
-              break;
-            }
+            if((__Get(KEY_STATUS)& KEY2_STATUS)!=0) break; 
           }
-          if(Current != TRACK3)  Calibrat(Current);             // 模拟通道校准
-//          Delayms(2000); 
-//            Delayms(500); 
-//            if((__Get(KEY_STATUS)& KEY2_STATUS)==0){
-//              Delayms(500); 
-//              if((__Get(KEY_STATUS)& KEY2_STATUS)==0){
-//                Delayms(500); 
-//                if((__Get(KEY_STATUS)& KEY2_STATUS)==0){
-//                  Calibrat();             // 模拟通道校准
-//                }
-//              }
-//            }
-//          }
+          if(Delay_Cnt == 0)  Calibrat(Current);             // 模拟通道校准
         }
       }
       if(Key_Buffer== KEY3){

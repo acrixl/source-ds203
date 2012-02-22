@@ -10,6 +10,7 @@
 #include "BIOS.h"
 #include "File.h"
 
+s8  Kab;                                   // 模拟通道零点平衡校正系数
 u32 a_Avg, b_Avg, a_Ssq, b_Ssq;            // 统计用中间变量
 u8  a_max, b_max, a_min, b_min;            // 统计用中间变量
 s16 A_Vdc, A_Vpp, A_Max, A_Min, A_Rms;     // 计量结果
@@ -154,7 +155,7 @@ void Update_Range(void)
     if(_T_base > 16){
       __Set(CH_B_RANGE,  G_Attr[0].Yp_Max+1);      // B通道合并到A通道
       __Set(ADC_MODE, INTERLACE);                  // Set Interlace mode
-      Interlace = 2;                        
+      Interlace = 1;                        
     }
   } 
   if(_Status == RUN) __Set(FIFO_CLR, W_PTR);       // FIFO写指针复位
@@ -220,17 +221,20 @@ void Update_Trig(void)
 *******************************************************************************/
 void Process(void)
 { 
-  s16 i, j, k;
+  s16 i, j, k, c_Max;
   
   n= 0;
   k =((1024 -_Kp)* 150)/1024 + _X_posi.Value;  // 计算插值运算后窗口位置的修正值
-  a_Avg =0; b_Avg =0; a_Ssq =0; b_Ssq =0;      // 统计用中间变量
-  a_max =0; b_max =0; a_min =255; b_min =255;  // 统计用中间变量
+  a_Avg =0; b_Avg =0; a_Ssq =0; b_Ssq =0;      // 统计用中间变量初始化
+  a_max =_1_posi; b_max =_2_posi; 
+  a_min =_1_posi; b_min =_2_posi;             
 
+  if((_3_posi + 20)>= Y_BASE+Y_SIZE)  c_Max = Y_BASE+Y_SIZE-1;
+  else                                c_Max = _3_posi + 20;
+  
   if(Interlace == 0){                          // 独立采样模式
     for(i=0; i <4096; i++){
-//      if((__Get(FIFO_EMPTY)==0)&&(i == JumpCnt)&&(_Status == RUN)){
-      if(_T_base > 16)  DataBuf[i] = __Read_FIFO(); // 读入32位FIFO数据, 读后指针+1
+      if((_T_base > 16)&&(_Status == RUN))  DataBuf[i] = __Read_FIFO(); // 读入32位FIFO数据, 读后指针+1
       else if((__Get(FIFO_EMPTY)==0)&&(i == JumpCnt)&&(_Status == RUN)){
         JumpCnt++;
         DataBuf[i] = __Read_FIFO();             // 读入32位FIFO数据, 读后指针+1
@@ -263,78 +267,93 @@ void Process(void)
           V[Bp]= V[B_]+((V[B]-V[B_])*((n *_Kp)-(j-1)*1024))/1024;  //计算当前CH_B点的插值
           TrackBuff[n*4 + TRACK2] = V[Bp];
           
-          Tmp = _3_posi + 20 * Ch[C];
-          if(Tmp >= Y_BASE+Y_SIZE)  Tmp = Y_BASE+Y_SIZE-1;
-          else if(Tmp <= Y_BASE+1)  Tmp = Y_BASE+1;
-          TrackBuff[n*4 + TRACK3] = Tmp;
+          if(Ch[C])  TrackBuff[n*4 + TRACK3] = c_Max;
+          else       TrackBuff[n*4 + TRACK3] = _3_posi;
           
           TrackBuff[n*4 + TRACK4] = CH_D_Data(); 
           n++;
-        V[A_] = V[A];  V[B_] = V[B];       
+          V[A_] = V[A];  V[B_] = V[B];     //??????????????  
+          if(n == 300-1) break;
         }
       }
     }
-  } else {                                      // 交替采样模式
-    for(i=0; i <4096; i++){
-      if((__Get(FIFO_EMPTY)==0)&&(i == JumpCnt)&&(_Status == RUN)){
-        JumpCnt++;
-        DataBuf[i] = __Read_FIFO();             // 读入32位FIFO数据, 读后指针+1
-      }
-      Ch[A] = (DataBuf[i] & 0xFF );              
-      Ch[B] = ((DataBuf[i] >> 8) & 0xFF);       
-
-      a_Avg += Ch[A]+Ch[B];                                   
-      b_Avg = a_Avg;                            // 累计直流平均值
+  } else {                            // 交替采样模式
       
-      Tmp = Ch[A]-_1_posi;
-      a_Ssq +=(Tmp * Tmp);
-      Tmp = Ch[B]-_1_posi;
-      a_Ssq +=(Tmp * Tmp);                    
-      b_Ssq  = a_Ssq;                           // 统计平方和
-      
-      if(Ch[A] > a_max)  a_max = Ch[A];          
-      if(Ch[B] > a_max)  a_max = Ch[B];         // 统计最大值 
-      b_max = a_max;
-      
-      if(Ch[A] < a_min)  a_min = Ch[A];         
-      if(Ch[B] < a_min)  a_min = Ch[B];         // 统计最小值  
-      b_min = a_min;
+    if(_2_source == HIDE){                         // B通道合并到A通道时
+      b_Avg = _2_posi*4096;
+    } else {                                       // A通道合并到B通道时
+      a_Avg = _1_posi*4096;
+    }
+    for(i=0; i <8192; i++){
+      if(_Status == RUN)  DataBuf[i/2] = __Read_FIFO(); // 读入32位FIFO数据, 读后指针+1
+      Ch[A] = (DataBuf[i/2] & 0xFF );              
+      Ch[B] = ((DataBuf[i/2] >> 8) & 0xFF);       
   
-      Ch[C] = ((DataBuf[i] >>16)& 1);
-      Ch[D] = ((DataBuf[i] >>17)& 1);
+      Ch[C] = ((DataBuf[i/2] >>16)& 1);
+      Ch[D] = ((DataBuf[i/2] >>17)& 1);
     
       if(_2_source == HIDE){                 // B通道合并到A通道时
-        V[A] = Ka1[_A_Range] +(Ka2[_A_Range] *Ch[A])/1024;        //计算当前第1点的主值
-        V[B] = Ka1[_A_Range] +(Ka2[_A_Range] *Ch[B])/1024;        //计算当前第2点的主值
+        Ch[B] += Kab;
+        a_Avg += (Ch[A]+Ch[B])/2;                                   // 累计直流平均值                                   
+        Tmp    = (Ch[A]-_1_posi);
+        a_Ssq += (Tmp * Tmp)/2;
+        Tmp    = (Ch[B]-_1_posi);
+        a_Ssq += (Tmp * Tmp)/2;                                       // 统计平方和                    
+        if(Ch[A] > a_max)  a_max = Ch[A];          
+        if(Ch[B] > a_max)  a_max = Ch[B];                          // 统计最大值 
+        if(Ch[A] < a_min)  a_min = Ch[A];         
+        if(Ch[B] < a_min)  a_min = Ch[B];                          // 统计最小值  
+        V[A] = Ka1[_A_Range] +(Ka2[_A_Range] *Ch[A])/1024;         //计算当前第1点的主值
+        V[B] = Ka1[_A_Range] +(Ka2[_A_Range] *Ch[B])/1024;         //计算当前第2点的主值
+        
       } else {                            // A通道合并到B通道时
+        
+        Ch[A] -= Kab;
+        b_Avg += Ch[A]+Ch[B]/2;                                      // 累计直流平均值                                   
+        Tmp    = Ch[A]-_2_posi;
+        b_Ssq += (Tmp * Tmp)/2;
+        Tmp    = Ch[B]-_2_posi;
+        b_Ssq += (Tmp * Tmp)/2;                                       // 统计平方和                    
+        if(Ch[A] > b_max)  b_max = Ch[A];          
+        if(Ch[B] > b_max)  b_max = Ch[B];                          // 统计最大值 
+        if(Ch[A] < b_min)  b_min = Ch[A];         
+        if(Ch[B] < b_min)  b_min = Ch[B];                          // 统计最小值  
         V[A] = Kb1[_B_Range] +(Kb2[_B_Range] * Ch[A])/1024;        //计算当前第1点的主值
         V[B] = Kb1[_B_Range] +(Kb2[_B_Range] * Ch[B])/1024;        //计算当前第2点的主值
       }
-      if((i > k)&&(n < 300-1)){                 // 指针到达指定窗口位置
-        j =i - k;
-        while(j*1024 > n*_Kp){
-          V[Bp] =V[A_]+((V[B]-V[A_])*((n *_Kp)-(j-1)*1024))/1024;   //计算当前第2点的插值
-          TrackBuff[n*4 + TRACK1] = V[Bp];
-          TrackBuff[n*4 + TRACK2] = V[Bp];
-          Tmp = _3_posi + 20 * Ch[C];
-          if(Tmp >= Y_BASE+Y_SIZE)  Tmp = Y_BASE+Y_SIZE-1;
-          else if(Tmp <= Y_BASE+1)  Tmp = Y_BASE+1;
-          TrackBuff[n*4 + TRACK3] = Tmp;
-          TrackBuff[n*4 + TRACK4] = CH_D_Data(); 
-          n++;
-        }
-        while(j*1024 > n*_Kp){
-          V[Ap] =V[B]+((V[A]-V[B])*((n *_Kp)-(j-1)*1024))/1024;   //计算当前第1点的插值
+        
+      if((i > k)&&(n < 300-1)){                 // 第1点指针到达指定窗口位置
+        j =i - k - 1;
+        while(j*1024 - n*_Kp > 0 ){
+          V[Ap] =V[B_]+((V[A]-V[B_])*((n *_Kp)-j*1024))/1024;   //计算当前第1点的插值
+//          V[Ap] =V[A];
           TrackBuff[n*4 + TRACK1] = V[Ap];
           TrackBuff[n*4 + TRACK2] = V[Ap];
-          Tmp = _3_posi + 20 * Ch[C];
-          if(Tmp >= Y_BASE+Y_SIZE)  Tmp = Y_BASE+Y_SIZE-1;
-          else if(Tmp <= Y_BASE+1)  Tmp = Y_BASE+1;
-          TrackBuff[n*4 + TRACK3] = Tmp;
+          if(Ch[C])  TrackBuff[n*4 + TRACK3] = c_Max;
+          else       TrackBuff[n*4 + TRACK3] = _3_posi;
           TrackBuff[n*4 + TRACK4] = CH_D_Data(); 
           n++;
+          if(n == 300-1)  break;
         }
-        V[A_] = V[A]; 
+      }
+      i++;
+      if((i > k)&&(n < 300-1)){                 // 第2点指针到达指定窗口位置
+        j =i - k - 1;
+        while(j*1024 - n*_Kp > 0 ){
+          V[Bp] =V[A]+((V[B]-V[A])*((n *_Kp)-j*1024))/1024;   //计算当前第2点的插值
+//          V[Bp] =V[B];
+          TrackBuff[n*4 + TRACK1] = V[Bp];
+          TrackBuff[n*4 + TRACK2] = V[Bp];
+          
+          if(Ch[C])  TrackBuff[n*4 + TRACK3] = c_Max;
+          else       TrackBuff[n*4 + TRACK3] = _3_posi;
+          
+          TrackBuff[n*4 + TRACK4] = CH_D_Data(); 
+          
+          n++;
+          V[B_] = V[B];       
+          if(n == 300-1)  break;
+        }
       }
     }
   }
@@ -442,8 +461,8 @@ void Synchro(void)  //扫描同步方式共有：AUTO、NORM、SIGN、NONE、SCAN 5种模式
       }
     }
   }    
-  A_Vdc = Ka1[_A_Range] +(Ka2[_A_Range]*(a_Avg/1024))/4096 - _1_posi;  
-  B_Vdc = Kb1[_B_Range] +(Kb2[_B_Range]*(b_Avg/1024))/4096 - _2_posi;  
+  A_Vdc = Ka1[_A_Range] +(Ka2[_A_Range]*(a_Avg/4096))/1024 - _1_posi;  
+  B_Vdc = Kb1[_B_Range] +(Kb2[_B_Range]*(b_Avg/4096))/1024 - _2_posi;  
 
   A_Rms = Ka1[_A_Range] +(Ka2[_A_Range]*Int_sqrt(a_Ssq/4096))/1024;
   B_Rms = Kb1[_B_Range] +(Kb2[_B_Range]*Int_sqrt(b_Ssq/4096))/1024;
@@ -454,7 +473,19 @@ void Synchro(void)  //扫描同步方式共有：AUTO、NORM、SIGN、NONE、SCAN 5种模式
   A_Min = Ka1[_A_Range] +(Ka2[_A_Range]*a_min)/1024 - _1_posi;
   B_Min = Kb1[_B_Range] +(Kb2[_B_Range]*b_min)/1024 - _2_posi;
     
+  if(A_Rms < 3)  A_Rms = 0;
+  if(B_Rms < 3)  B_Rms = 0;
+  
+  if((A_Vdc < 3)&&(A_Vdc > -3))  A_Vdc = 0;
+  if((B_Vdc < 3)&&(B_Vdc > -3))  B_Vdc = 0;
+  if((A_Max < 3)&&(A_Max > -3))  A_Max = 0;
+  if((B_Max < 3)&&(B_Max > -3))  B_Max = 0;
+  if((A_Min < 3)&&(A_Min > -3))  A_Min = 0;
+  if((B_Min < 3)&&(B_Min > -3))  B_Min = 0;
+  
   A_Vpp = A_Max - A_Min;
   B_Vpp = B_Max - B_Min;
+  
+  
 }  
 /******************************** END OF FILE *********************************/
